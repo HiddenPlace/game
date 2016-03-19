@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <style>
+        canvas {
+            border:1px solid #d3d3d3;
+            background-color: #f1f1f1;
+        }
+    </style>
+    </head>
+
+<body onload="startGame()">
+
+    <script>
+    var TILE_SIZE = 30;
+    var ENEMY_COLOR = "green";
+    var PLAYER_COLOR = "red";
+
+
+    function startGame() {
+        myGameArea.start();
+        player = new component("player", 30, 120);
+        enemies = [new component("enemy", 30, 30), new component("enemy", 150, 120)];
+    }
+
+    var myGameArea = {
+        canvas : document.createElement("canvas"),
+        start : function() {
+            this.canvas.width = 480;
+            this.canvas.height = 270;
+            this.context = this.canvas.getContext("2d");
+            document.body.insertBefore(this.canvas, document.body.childNodes[0]);
+            this.interval = setInterval(updateGameArea, 20);
+            window.addEventListener('keydown', function (e) {
+                myGameArea.key = e.keyCode;
+            })
+        },
+        clear : function() {
+            this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        }
+    }
+
+    function component(type, x, y) {
+        this.x = x;
+        this.y = y;
+        this.health = 100;
+        if (type == "player") {
+            this.width = TILE_SIZE;
+            this.height = TILE_SIZE;
+            this.update = function() {
+                ctx = myGameArea.context;
+                ctx.fillStyle = PLAYER_COLOR;
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+            }
+        } else if (type == "enemy") {
+            this.radius = TILE_SIZE / 2;
+            this.update = function() {
+                ctx = myGameArea.context;
+                ctx.fillStyle = ENEMY_COLOR;
+                ctx.beginPath();
+                ctx.arc(this.x + this.radius, this.y + this.radius, this.radius, 0, 2*Math.PI);
+                ctx.fill();
+            }
+        }
+        this.isMovable = function(direction) {
+            var newX;
+            var newY;
+            switch (direction) {
+                case "UP":
+                    newX = this.x;
+                    newY = this.y - TILE_SIZE;
+                    break;
+                case "DOWN":
+                    newX = this.x;
+                    newY = this.y + TILE_SIZE;
+                    break;
+                case "RIGHT":
+                    newX = this.x + TILE_SIZE;
+                    newY = this.y;
+                    break;
+                case "LEFT":
+                    newX = this.x - TILE_SIZE;
+                    newY = this.y;
+                    break;
+                default:
+                    return false;
+            }
+            for (var i = 0; i < enemies.length; i++) {
+                if (enemies[i].x == newX && enemies[i].y == newY) {
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
+
+    function updateGameArea() {
+        myGameArea.clear();
+        if (myGameArea.key && myGameArea.key == 37) {moveleft(); myGameArea.key = false;}
+        if (myGameArea.key && myGameArea.key == 39) {moveright(); myGameArea.key = false;}
+        if (myGameArea.key && myGameArea.key == 38) {moveup(); myGameArea.key = false;}
+        if (myGameArea.key && myGameArea.key == 40) {movedown(); myGameArea.key = false;}
+        player.update();
+        for (var i = 0; i < enemies.length; i++) {
+            enemies[i].update();
+        }
+    }
+
+    function moveup() {
+        if (player.isMovable("UP")) {
+            player.y -= TILE_SIZE;
+        }
+    }
+
+    function movedown() {
+        if (player.isMovable("DOWN")) {
+            player.y += TILE_SIZE;
+        }
+    }
+
+    function moveleft() {
+        if (player.isMovable("LEFT")) {
+            player.x -= TILE_SIZE;
+        }
+    }
+
+    function moveright() {
+        if (player.isMovable("RIGHT")) {
+            player.x += TILE_SIZE;
+        }
+    }
+
+</script>
+
+<br>
+<button onmousedown="accelerate(-0.2)" onmouseup="accelerate(0.05)">ACCELERATE</button>
+
+<div style="text-align:center;width:480px;">
+    <button onclick="moveup()">UP</button><br><br>
+    <button onclick="moveleft()">LEFT</button>
+    <button onclick="moveright()">RIGHT</button><br><br>
+    <button onclick="movedown()">DOWN</button>
+</div>
+
+</body>
+</html>
